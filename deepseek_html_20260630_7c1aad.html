@@ -1,0 +1,1521 @@
+<!DOCTYPE html>
+<html lang="si">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>D.T TRENDS · Netflix Style</title>
+    <style>
+        /* ───── RESET & BASE ───── */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, -apple-system, sans-serif;
+            background: #0a0a0a;
+            color: #ffffff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* ───── CUSTOM CURSOR (Desktop only) ───── */
+        @media (hover: hover) and (pointer: fine) {
+            body {
+                cursor: none;
+            }
+            #custom-pointer {
+                width: 16px;
+                height: 16px;
+                background: #ffe066;
+                border: 2px solid #d4af37;
+                border-radius: 50%;
+                position: fixed;
+                left: 0;
+                top: 0;
+                pointer-events: none;
+                z-index: 10000;
+                transform: translate(-50%, -50%);
+                box-shadow: 0 0 20px #d4af37, 0 0 40px #ffe066;
+                transition: transform 0.12s cubic-bezier(0.16, 1, 0.3, 1);
+                will-change: left, top, transform;
+            }
+            body.hover-active #custom-pointer {
+                transform: translate(-50%, -50%) scale(2.4);
+                background: transparent;
+                border-color: #ffffff;
+                box-shadow: 0 0 40px #ffffff;
+            }
+        }
+
+        @media (hover: none) {
+            #custom-pointer {
+                display: none !important;
+            }
+        }
+
+        /* ───── SCROLLBAR ───── */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #141414; }
+        ::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #ffe066; }
+
+        /* ───── SHADER OVERLAY (Optimized) ───── */
+        #shader-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.4;
+            transition: opacity 1s ease;
+        }
+        #shader-bg canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ───── HEADER / NAVBAR ───── */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+            padding: 12px 4%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.9) 0%, transparent 100%);
+            transition: background 0.3s, padding 0.3s;
+        }
+        .navbar.scrolled {
+            background: rgba(10, 10, 10, 0.96);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+        }
+        .nav-logo {
+            font-family: 'Segoe UI', sans-serif;
+            font-weight: 900;
+            font-size: 1.5rem;
+            letter-spacing: 3px;
+            background: linear-gradient(135deg, #d4af37, #ffe066);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 30px rgba(212, 175, 55, 0.2);
+            cursor: pointer;
+            user-select: none;
+        }
+        .nav-logo span {
+            -webkit-text-fill-color: #fff;
+            background: none;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+            list-style: none;
+        }
+        .nav-links li {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #b3b3b3;
+            cursor: pointer;
+            transition: color 0.2s;
+            letter-spacing: 0.5px;
+        }
+        .nav-links li:hover,
+        .nav-links li.active {
+            color: #ffffff;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+        .nav-right i {
+            font-size: 1.2rem;
+            color: #b3b3b3;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .nav-right i:hover {
+            color: #ffffff;
+        }
+        .nav-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 4px;
+            background: linear-gradient(135deg, #d4af37, #ffe066);
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* ───── HERO ───── */
+        .hero {
+            position: relative;
+            z-index: 1;
+            margin-top: 60px;
+            padding: 80px 4% 60px;
+            min-height: 75vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.85) 0%, transparent 60%);
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 4px 16px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 20px;
+            font-size: 0.7rem;
+            letter-spacing: 3px;
+            color: #d4af37;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            width: fit-content;
+            backdrop-filter: blur(10px);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .hero h1 {
+            font-size: clamp(2.8rem, 8vw, 5.5rem);
+            font-weight: 900;
+            line-height: 1.05;
+            max-width: 700px;
+            text-shadow: 0 4px 40px rgba(0, 0, 0, 0.8);
+        }
+        .hero h1 .gold {
+            background: linear-gradient(135deg, #d4af37, #ffe066);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            max-width: 500px;
+            color: #b3b3b3;
+            margin-top: 12px;
+            line-height: 1.6;
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.9);
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 16px;
+            margin-top: 28px;
+            flex-wrap: wrap;
+        }
+        .btn-hero {
+            padding: 12px 36px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            border: none;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+        .btn-hero-primary {
+            background: linear-gradient(135deg, #d4af37, #ffe066);
+            color: #000;
+            box-shadow: 0 0 40px rgba(212, 175, 55, 0.2);
+        }
+        .btn-hero-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 60px rgba(212, 175, 55, 0.4);
+        }
+        .btn-hero-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #fff;
+        }
+        .btn-hero-secondary:hover {
+            background: rgba(255, 255, 255, 0.16);
+            transform: scale(1.05);
+        }
+
+        /* ───── CONTENT ROWS ───── */
+        .row-section {
+            position: relative;
+            z-index: 2;
+            padding: 16px 0 10px 4%;
+            content-visibility: auto;
+            contain-intrinsic-size: 0 300px;
+        }
+        .row-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-right: 4%;
+            margin-bottom: 10px;
+        }
+        .row-header h2 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        .row-header .see-all {
+            font-size: 0.8rem;
+            color: #b3b3b3;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .row-header .see-all:hover {
+            color: #fff;
+        }
+
+        .row-scroll {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 8px 4% 8px 0;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+            cursor: grab;
+            touch-action: pan-x;
+        }
+        .row-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        .row-scroll.dragging {
+            cursor: grabbing;
+            scroll-behavior: auto;
+        }
+
+        /* ───── NETFLIX CARD ───── */
+        .movie-card {
+            flex: 0 0 200px;
+            aspect-ratio: 2 / 3;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            background: #1a1a1a;
+            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
+            will-change: transform;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        .movie-card:hover {
+            transform: scale(1.06) translateY(-8px);
+            z-index: 10;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 175, 55, 0.08);
+            border-color: rgba(212, 175, 55, 0.3);
+        }
+
+        .movie-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.4s ease;
+            background: #111;
+        }
+        .movie-card:hover img {
+            transform: scale(1.02);
+        }
+
+        .movie-card .liquid-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 16px;
+        }
+        .movie-card:hover .liquid-overlay {
+            opacity: 1;
+        }
+        @media (hover: none) {
+            .movie-card .liquid-overlay {
+                opacity: 1;
+                background: linear-gradient(to top, rgba(0, 0, 0, 0.7) 0%, transparent 50%);
+            }
+            .movie-card .liquid-overlay .play-icon {
+                transform: translate(-50%, -50%) scale(0.9);
+                opacity: 0.7;
+            }
+        }
+
+        .movie-card .liquid-overlay .title {
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+        }
+        .movie-card .liquid-overlay .meta {
+            font-size: 0.7rem;
+            color: #b3b3b3;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .movie-card .liquid-overlay .meta .rating {
+            color: #d4af37;
+            font-weight: 700;
+        }
+        .movie-card .liquid-overlay .play-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(212, 175, 55, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(8px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+        .movie-card:hover .liquid-overlay .play-icon {
+            transform: translate(-50%, -50%) scale(1);
+        }
+        .movie-card .liquid-overlay .play-icon i {
+            font-size: 1.2rem;
+            color: #000;
+            margin-left: 4px;
+        }
+
+        /* Border liquid effect */
+        .movie-card::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 14px;
+            padding: 2px;
+            background: conic-gradient(from var(--angle, 0deg), transparent 0%, #d4af37 30%, #ffe066 60%, transparent 80%);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+            animation: rotateBorder 2.5s linear infinite;
+        }
+        .movie-card:hover::before {
+            opacity: 1;
+        }
+        @keyframes rotateBorder {
+            to {
+                --angle: 360deg;
+            }
+        }
+        @property --angle {
+            syntax: '<angle>';
+            initial-value: 0deg;
+            inherits: false;
+        }
+
+        /* ───── VIDEO PLAYER MODAL (IMPROVED) ───── */
+        #videoModal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 3000;
+            background: rgba(0, 0, 0, 0.92);
+            backdrop-filter: blur(30px);
+            justify-content: center;
+            align-items: center;
+            padding: 30px;
+            animation: modalFade 0.3s ease;
+        }
+        #videoModal.open {
+            display: flex;
+        }
+        #videoModal .video-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            aspect-ratio: 16 / 9;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.9);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            background: #000;
+            display: flex;
+            flex-direction: column;
+        }
+        #videoModal .video-wrapper iframe {
+            width: 100%;
+            flex: 1;
+            border: none;
+            display: block;
+        }
+        #videoModal .close-video-btn {
+            position: absolute;
+            top: -50px;
+            right: 0;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 2.8rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+            line-height: 1;
+            text-shadow: 0 2px 20px rgba(0, 0, 0, 0.8);
+            z-index: 10;
+        }
+        #videoModal .close-video-btn:hover {
+            transform: scale(1.2);
+            color: #d4af37;
+        }
+
+        /* Video Footer with Title & Fallback Link */
+        .video-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 18px;
+            background: rgba(0, 0, 0, 0.8);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            flex-shrink: 0;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .video-footer .video-title {
+            color: #b3b3b3;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 60%;
+        }
+        .video-footer .video-fallback-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            background: #ff0000;
+            color: #fff;
+            border-radius: 20px;
+            text-decoration: none;
+            font-size: 0.75rem;
+            font-weight: 700;
+            transition: all 0.2s;
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .video-footer .video-fallback-link:hover {
+            background: #cc0000;
+            transform: scale(1.04);
+            box-shadow: 0 0 20px rgba(255, 0, 0, 0.3);
+        }
+        .video-footer .video-fallback-link i {
+            font-size: 0.9rem;
+        }
+
+        /* ───── BACK TO TOP ───── */
+        #backToTop {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 150;
+            background: #d4af37;
+            color: #000;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.3);
+            transition: transform 0.2s, opacity 0.3s;
+            opacity: 0;
+            pointer-events: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #backToTop.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        #backToTop:hover {
+            transform: scale(1.1) translateY(-4px);
+            box-shadow: 0 8px 30px rgba(212, 175, 55, 0.5);
+        }
+
+        /* ───── ADMIN MODAL ───── */
+        .admin-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(30px);
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .admin-modal.open {
+            display: flex;
+            animation: modalFade 0.3s ease;
+        }
+        @keyframes modalFade {
+            from {
+                opacity: 0;
+                transform: scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .admin-content {
+            background: #141414;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            border-radius: 20px;
+            padding: 35px;
+            max-width: 700px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.9);
+            position: relative;
+        }
+        .admin-content .close-modal {
+            position: absolute;
+            top: 16px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: #b3b3b3;
+            font-size: 1.6rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .admin-content .close-modal:hover {
+            color: #fff;
+        }
+        .admin-content h2 {
+            color: #d4af37;
+            font-size: 1.3rem;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #272727;
+            padding-bottom: 14px;
+        }
+
+        .upload-box {
+            background: #0c0c12;
+            border: 2px dashed rgba(212, 175, 55, 0.2);
+            padding: 20px;
+            border-radius: 14px;
+            margin-bottom: 30px;
+        }
+        .upload-form-group {
+            margin-bottom: 14px;
+        }
+        .upload-form-group label {
+            display: block;
+            font-size: 11px;
+            color: #a1a1aa;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .upload-form-group input,
+        .upload-form-group textarea {
+            width: 100%;
+            padding: 11px 14px;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            color: white;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+        }
+        .upload-form-group input:focus,
+        .upload-form-group textarea:focus {
+            border-color: #d4af37;
+            outline: none;
+        }
+        .upload-form-group textarea {
+            resize: vertical;
+            height: 80px;
+        }
+
+        .submit-btn {
+            background: linear-gradient(45deg, #d4af37, #ffe066);
+            color: #000;
+            font-weight: bold;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            width: 100%;
+            transition: all 0.2s;
+        }
+        .submit-btn:hover {
+            background: #ffffff;
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
+        }
+
+        .export-box {
+            background: #050508;
+            border: 1px solid #d4af37;
+            padding: 16px;
+            border-radius: 12px;
+            margin-top: 16px;
+            display: none;
+        }
+        .export-box textarea {
+            width: 100%;
+            height: 120px;
+            background: #000;
+            color: #00ffcc;
+            border: 1px solid #222;
+            padding: 10px;
+            font-family: monospace;
+            font-size: 10px;
+            resize: none;
+            margin-top: 8px;
+            border-radius: 6px;
+        }
+
+        .media-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .media-card-admin {
+            background: #0c0c12;
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+        }
+        .media-card-admin img {
+            width: 100%;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+            border-radius: 8px;
+            background: #000;
+        }
+        .media-card-admin h4 {
+            font-size: 0.8rem;
+            margin: 8px 0 4px;
+            color: #fff;
+        }
+        .media-card-admin p {
+            font-size: 0.6rem;
+            color: #888;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .delete-btn {
+            background: #ff4d4d;
+            color: #fff;
+            border: none;
+            padding: 6px;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-top: 8px;
+        }
+        .delete-btn:hover {
+            background: #ff1a1a;
+        }
+
+        .admin-password-hint {
+            font-size: 0.7rem;
+            color: #555;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        /* ───── FOOTER ───── */
+        .footer {
+            position: relative;
+            z-index: 2;
+            padding: 40px 4% 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
+            margin-top: 30px;
+            text-align: center;
+            color: #4b5563;
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+        }
+        .footer span {
+            color: #d4af37;
+        }
+
+        /* ───── RESPONSIVE ───── */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+            .hero {
+                min-height: 50vh;
+                padding: 100px 4% 40px;
+            }
+            .hero h1 {
+                font-size: 2.4rem;
+            }
+            .movie-card {
+                flex: 0 0 150px;
+            }
+            .admin-content {
+                padding: 20px;
+            }
+            .media-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .navbar {
+                padding: 10px 4%;
+            }
+            .nav-logo {
+                font-size: 1.1rem;
+            }
+            #videoModal .close-video-btn {
+                top: -40px;
+                font-size: 2.2rem;
+            }
+            #backToTop {
+                width: 44px;
+                height: 44px;
+                font-size: 1.2rem;
+                bottom: 20px;
+                right: 20px;
+            }
+            .video-footer .video-title {
+                max-width: 50%;
+                font-size: 0.75rem;
+            }
+            .video-footer .video-fallback-link {
+                font-size: 0.65rem;
+                padding: 4px 12px;
+            }
+        }
+        @media (max-width: 480px) {
+            .movie-card {
+                flex: 0 0 120px;
+            }
+            .hero h1 {
+                font-size: 1.8rem;
+            }
+            .btn-hero {
+                padding: 10px 24px;
+                font-size: 0.8rem;
+            }
+        }
+
+        /* ───── LOADING ───── */
+        #loading-screen {
+            position: fixed;
+            inset: 0;
+            z-index: 99999;
+            background: #0a0a0a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 20px;
+            transition: opacity 0.6s ease;
+        }
+        #loading-screen.hide {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .liquid-loader {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg, #d4af37, #ffe066, #d4af37);
+            animation: spinLoader 1.2s cubic-bezier(0.6, 0, 0.4, 1) infinite;
+            filter: blur(4px);
+            box-shadow: 0 0 60px rgba(212, 175, 55, 0.3);
+        }
+        @keyframes spinLoader {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        .loading-text {
+            font-size: 0.9rem;
+            letter-spacing: 6px;
+            text-transform: uppercase;
+            color: #b3b3b3;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ─── LOADING SCREEN ─── -->
+    <div id="loading-screen">
+        <div class="liquid-loader"></div>
+        <div class="loading-text">Loading D.T TRENDS</div>
+    </div>
+
+    <!-- ─── SHADER BACKGROUND ─── -->
+    <div id="shader-bg">
+        <canvas id="shader-canvas"></canvas>
+    </div>
+
+    <!-- ─── CURSOR ─── -->
+    <div id="custom-pointer"></div>
+
+    <!-- ─── BACK TO TOP ─── -->
+    <button id="backToTop" onclick="window.scrollTo({top:0,behavior:'smooth'})" aria-label="Back to top">↑</button>
+
+    <!-- ─── NAVBAR ─── -->
+    <nav class="navbar" id="navbar">
+        <div class="nav-left">
+            <div class="nav-logo">D.T <span>TRENDS</span></div>
+            <ul class="nav-links">
+                <li class="active">Home</li>
+                <li onclick="openAdminModal()">Admin</li>
+                <li>Movies</li>
+                <li>Games</li>
+            </ul>
+        </div>
+        <div class="nav-right">
+            <i class="fas fa-search"></i>
+            <i class="fas fa-bell"></i>
+            <div class="nav-avatar" onclick="openAdminModal()"></div>
+        </div>
+    </nav>
+
+    <!-- ─── HERO ─── -->
+    <section class="hero" id="heroSection">
+        <div class="hero-badge">🎬 Now Trending</div>
+        <h1>D.T <span class="gold">Cinematic</span> Universe</h1>
+        <p>Explore the ultimate collection of premium edits, trailers, and exclusive content from the D.T TRENDS studio.</p>
+        <div class="hero-buttons">
+            <a href="https://youtube.com/shorts/0uhB2dR94Rc" target="_blank" class="btn-hero btn-hero-primary"><i class="fas fa-play"></i> Watch Short</a>
+            <a href="#" class="btn-hero btn-hero-secondary"><i class="fas fa-info-circle"></i> More Info</a>
+        </div>
+    </section>
+
+    <!-- ─── CONTENT ROWS ─── -->
+    <div class="row-section" id="rowTrending">
+        <div class="row-header">
+            <h2>🔥 Trending Now</h2>
+            <span class="see-all">See All →</span>
+        </div>
+        <div class="row-scroll" id="trendingRow"></div>
+    </div>
+
+    <div class="row-section" id="rowPopular">
+        <div class="row-header">
+            <h2>⭐ Popular on D.T TRENDS</h2>
+            <span class="see-all">See All →</span>
+        </div>
+        <div class="row-scroll" id="popularRow"></div>
+    </div>
+
+    <div class="row-section" id="rowContinue">
+        <div class="row-header">
+            <h2>▶️ Continue Watching</h2>
+            <span class="see-all">See All →</span>
+        </div>
+        <div class="row-scroll" id="continueRow"></div>
+    </div>
+
+    <!-- ─── VIDEO PLAYER MODAL (IMPROVED) ─── -->
+    <div id="videoModal" onclick="closeVideoModal(event)">
+        <div class="video-wrapper" onclick="event.stopPropagation();">
+            <button class="close-video-btn" onclick="closeVideoModal()">&times;</button>
+            <iframe id="videoIframe" src="" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>
+            <div class="video-footer">
+                <span class="video-title" id="videoTitle">Now Playing</span>
+                <a href="#" id="videoFallbackLink" target="_blank" class="video-fallback-link">
+                    <i class="fab fa-youtube"></i> Watch on YouTube
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── ADMIN MODAL ─── -->
+    <div class="admin-modal" id="adminModal">
+        <div class="admin-content">
+            <button class="close-modal" onclick="closeAdminModal()">&times;</button>
+            <h2>⚡ ADMIN WORKSPACE</h2>
+
+            <div style="margin-bottom: 20px;">
+                <input type="password" id="adminPassInput" placeholder="Enter Admin Password" style="width:100%; padding:12px; background:#1a1a1a; border:1px solid #333; color:#fff; border-radius:8px; font-size:0.9rem;">
+                <button onclick="verifyAdmin()" style="margin-top:10px; width:100%; padding:12px; background:#d4af37; color:#000; font-weight:bold; border:none; border-radius:8px; cursor:pointer;">Unlock Dashboard</button>
+                <div class="admin-password-hint">Hint: default password is <strong>admin123</strong></div>
+            </div>
+
+            <div id="adminControls" style="display:none;">
+                <div class="upload-box">
+                    <h3 style="color:#d4af37; margin-bottom:14px; font-size:15px;">📥 Publish Video Card</h3>
+                    <div class="upload-form-group">
+                        <label>Video Title</label>
+                        <input type="text" id="mediaTitle" placeholder="Ex: Cyberpunk Edit 4K">
+                    </div>
+                    <div class="upload-form-group">
+                        <label>YouTube / Video Link</label>
+                        <input type="text" id="mediaUrl" placeholder="https://www.youtube.com/watch?v=...">
+                    </div>
+                    <div class="upload-form-group">
+                        <label>Description / Code</label>
+                        <textarea id="mediaTextCode" placeholder="Paste your text code or tagline..."></textarea>
+                    </div>
+                    <div class="upload-form-group">
+                        <label>Thumbnail Image</label>
+                        <input type="file" id="mediaFile" accept="image/*">
+                    </div>
+                    <button class="submit-btn" onclick="processUpload()">GENERATE GLOBAL CODE</button>
+                    <div class="export-box" id="exportBox">
+                        <p style="color:#ffe066; font-size:12px; font-weight:bold;">👇 Copy this full HTML code:</p>
+                        <textarea id="exportArea" readonly onclick="this.select()"></textarea>
+                    </div>
+                </div>
+
+                <h3 style="color:#fff; border-bottom:1px solid #272727; padding-bottom:10px; margin-bottom:16px; font-size:15px;">🛠️ Manage Media</h3>
+                <div class="media-grid" id="adminMediaGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── FOOTER ─── -->
+    <div class="footer">
+        <p>Created By: <span>Dinith Thaveesha</span> · Most Wanted Edition · D.T TRENDS</p>
+    </div>
+
+    <!-- ─── FONTAWESOME ─── -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <!-- ─── THREE.JS ─── -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js">
+    </script>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════════
+        //  1. LIQUID DISTORTION SHADER (OPTIMIZED)
+        // ═══════════════════════════════════════════════════════════════
+
+        (function initShader() {
+            const startShader = () => {
+                const container = document.getElementById('shader-bg');
+                const canvas = document.getElementById('shader-canvas');
+
+                const renderer = new THREE.WebGLRenderer({
+                    canvas,
+                    alpha: true,
+                    antialias: false,
+                    powerPreference: "high-performance"
+                });
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.2));
+                renderer.setClearColor(0x0a0a0a, 1);
+
+                let width = window.innerWidth;
+                let height = window.innerHeight;
+                renderer.setSize(width, height);
+
+                const scene = new THREE.Scene();
+                const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 10);
+                camera.position.z = 1;
+
+                const geometry = new THREE.PlaneGeometry(2, 2);
+
+                const uniforms = {
+                    u_time: { value: 0 },
+                    u_resolution: { value: new THREE.Vector2(width, height) },
+                    u_mouse: { value: new THREE.Vector2(0.5, 0.5) },
+                    u_intensity: { value: 0.5 }
+                };
+
+                const vertexShader = `
+                    varying vec2 vUv;
+                    void main() {
+                        vUv = uv;
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                `;
+
+                const fragmentShader = `
+                    precision highp float;
+                    varying vec2 vUv;
+                    uniform float u_time;
+                    uniform vec2 u_resolution;
+                    uniform vec2 u_mouse;
+                    uniform float u_intensity;
+
+                    float hash(vec2 p) {
+                        return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+                    }
+                    float noise(vec2 p) {
+                        vec2 i = floor(p);
+                        vec2 f = fract(p);
+                        vec2 u = f * f * (3.0 - 2.0 * f);
+                        return mix(
+                            mix(hash(i), hash(i + vec2(1.0, 0.0)), u.x),
+                            mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), u.x),
+                            u.y
+                        );
+                    }
+                    float fbm(vec2 p) {
+                        float value = 0.0, amp = 0.5, freq = 2.0;
+                        for (int i = 0; i < 3; i++) {
+                            value += amp * noise(p * freq);
+                            amp *= 0.5;
+                            freq *= 2.0;
+                        }
+                        return value;
+                    }
+
+                    void main() {
+                        vec2 uv = vUv;
+                        float t = u_time * 0.25;
+                        vec2 flow1 = vec2(
+                            fbm(uv * 3.0 + t * 0.5),
+                            fbm(uv * 3.0 + vec2(t * 0.3, t * 0.2))
+                        ) - 0.5;
+                        vec2 flow2 = vec2(
+                            fbm(uv * 4.0 - t * 0.2 + vec2(1.0, 0.7)),
+                            fbm(uv * 4.0 + t * 0.4 + vec2(0.5, 1.0))
+                        ) - 0.5;
+                        vec2 mouseOffset = (u_mouse - 0.5) * 0.4;
+                        vec2 distortion = (flow1 * 0.6 + flow2 * 0.4) * (0.15 + u_intensity * 0.1) + mouseOffset * 0.04;
+                        vec2 warped = uv + distortion;
+
+                        float grad = fbm(warped * 2.0 + t * 0.1);
+                        vec3 col1 = vec3(0.02, 0.01, 0.01);
+                        vec3 col2 = vec3(0.06, 0.03, 0.02);
+                        vec3 col3 = vec3(0.12, 0.06, 0.04);
+
+                        vec3 base = mix(col1, col2, grad);
+                        base = mix(base, col3, fbm(warped * 4.0 + t * 0.08) * 0.4);
+
+                        float veins = fbm(warped * 8.0 + t * 0.25);
+                        veins = smoothstep(0.4, 0.65, veins);
+                        float veinMask = veins * 0.5;
+                        vec3 gold = vec3(0.83, 0.69, 0.22);
+                        vec3 veinColor = gold * (0.4 + 0.6 * veinMask);
+
+                        float glow = fbm(warped * 2.0 + t * 0.1);
+                        glow = 1.0 - abs(glow - 0.5) * 2.0;
+                        glow = pow(glow, 2.0) * 0.3;
+                        vec3 glowColor = vec3(1.0, 0.9, 0.4) * glow;
+
+                        vec3 finalColor = base + veinColor * 0.15 + glowColor * 0.25;
+
+                        vec2 vigUv = warped - 0.5;
+                        float vig = 1.0 - dot(vigUv, vigUv) * 1.0;
+                        finalColor *= clamp(vig, 0.0, 1.0);
+
+                        gl_FragColor = vec4(finalColor, 0.85);
+                    }
+                `;
+
+                const material = new THREE.ShaderMaterial({
+                    uniforms,
+                    vertexShader,
+                    fragmentShader,
+                });
+
+                const mesh = new THREE.Mesh(geometry, material);
+                scene.add(mesh);
+
+                let mouseX = 0.5,
+                    mouseY = 0.5;
+                document.addEventListener('mousemove', (e) => {
+                    mouseX = e.clientX / window.innerWidth;
+                    mouseY = 1.0 - e.clientY / window.innerHeight;
+                    uniforms.u_mouse.value.set(mouseX, mouseY);
+                });
+
+                function resizeShader() {
+                    width = window.innerWidth;
+                    height = window.innerHeight;
+                    renderer.setSize(width, height);
+                    uniforms.u_resolution.value.set(width, height);
+                }
+                window.addEventListener('resize', resizeShader);
+
+                let startTime = performance.now();
+
+                function animateShader() {
+                    const elapsed = (performance.now() - startTime) / 1000;
+                    uniforms.u_time.value = elapsed;
+                    uniforms.u_intensity.value = 0.5 + Math.sin(elapsed * 0.4) * 0.15;
+                    renderer.render(scene, camera);
+                    requestAnimationFrame(animateShader);
+                }
+
+                animateShader();
+                console.log('🌀 Optimized Liquid Shader Active');
+            };
+
+            if (document.readyState === 'complete') {
+                setTimeout(startShader, 100);
+            } else {
+                window.addEventListener('load', () => {
+                    setTimeout(startShader, 200);
+                });
+            }
+        })();
+
+
+        // ═══════════════════════════════════════════════════════════════
+        //  2. NETFLIX ROWS & LOGIC
+        // ═══════════════════════════════════════════════════════════════
+
+        const DEFAULT_MEDIA = [{
+            title: "🔥 NEW: Epic Short",
+            url: "https://youtube.com/shorts/0uhB2dR94Rc",
+            textCode: "🎬 Viral Short! Watch now.",
+            photo: "https://img.youtube.com/vi/0uhB2dR94Rc/hqdefault.jpg"
+        }, {
+            title: "Cyberpunk 2077 Edit",
+            url: "https://youtube.com/watch?v=dQw4w9WgXcQ",
+            textCode: "🔥 Neon vibes • 4K HDR",
+            photo: "https://placehold.co/400x600/111/d4af37?text=Cyberpunk"
+        }, {
+            title: "Wolf Cut Cinematic",
+            url: "https://youtube.com/watch?v=2",
+            textCode: "🎬 Slow motion mastery",
+            photo: "https://placehold.co/400x600/111/ffe066?text=Wolf+Cut"
+        }, {
+            title: "Night City Drift",
+            url: "https://youtube.com/watch?v=3",
+            textCode: "🏎️ Drift racing edit",
+            photo: "https://placehold.co/400x600/111/d4af37?text=Drift"
+        }, {
+            title: "Anime AMV Mix",
+            url: "https://youtube.com/watch?v=4",
+            textCode: "✨ Epic AMV compilation",
+            photo: "https://placehold.co/400x600/111/ffe066?text=AMV"
+        }, {
+            title: "D.T TRENDS Trailer",
+            url: "https://youtube.com/watch?v=5",
+            textCode: "🎥 Official trailer",
+            photo: "https://placehold.co/400x600/111/d4af37?text=Trailer"
+        }, {
+            title: "Cinematic Dreams",
+            url: "https://youtube.com/watch?v=6",
+            textCode: "🌌 Dreamy sequences",
+            photo: "https://placehold.co/400x600/111/ffe066?text=Dreams"
+        }];
+
+        let GLOBAL_MEDIA_DATA = [...DEFAULT_MEDIA];
+
+        function renderRows() {
+            const trending = document.getElementById('trendingRow');
+            const popular = document.getElementById('popularRow');
+            const cont = document.getElementById('continueRow');
+
+            trending.innerHTML = '';
+            popular.innerHTML = '';
+            cont.innerHTML = '';
+
+            GLOBAL_MEDIA_DATA.slice(0, 4).forEach(item => {
+                trending.appendChild(createCard(item));
+            });
+            const popItems = GLOBAL_MEDIA_DATA.length > 4 ? GLOBAL_MEDIA_DATA.slice(4) : GLOBAL_MEDIA_DATA;
+            popItems.forEach(item => {
+                popular.appendChild(createCard(item));
+            });
+            GLOBAL_MEDIA_DATA.forEach(item => {
+                cont.appendChild(createCard(item));
+            });
+        }
+
+        function createCard(item) {
+            const card = document.createElement('div');
+            card.className = 'movie-card';
+            card.innerHTML = `
+                <img src="${item.photo}" loading="lazy" onerror="this.src='https://placehold.co/400x600/111/444?text=D.T'" alt="${item.title}">
+                <div class="liquid-overlay">
+                    <div class="play-icon"><i class="fas fa-play"></i></div>
+                    <div class="title">${item.title}</div>
+                    <div class="meta">
+                        <span class="rating">★ 8.5</span>
+                        <span>2025</span>
+                    </div>
+                </div>
+            `;
+            card.addEventListener('click', () => {
+                openVideoModal(item.url, item.title);
+            });
+            card.addEventListener('mouseenter', () => document.body.classList.add('hover-active'));
+            card.addEventListener('mouseleave', () => document.body.classList.remove('hover-active'));
+            return card;
+        }
+
+        // ── VIDEO MODAL (FIXED: Error 153 handled with fallback) ──
+        function openVideoModal(url, title) {
+            const modal = document.getElementById('videoModal');
+            const iframe = document.getElementById('videoIframe');
+            const titleEl = document.getElementById('videoTitle');
+            const fallbackLink = document.getElementById('videoFallbackLink');
+
+            // Set fallback link (user can always click this if embed fails)
+            fallbackLink.href = url;
+
+            let videoId = null;
+            // Pattern 1: youtube.com/shorts/XXXX  or  youtu.be/XXXX
+            let match = url.match(/(?:youtube\.com\/shorts\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+            if (match) videoId = match[1];
+            else {
+                // Pattern 2: youtube.com/watch?v=XXXX
+                match = url.match(/(?:youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/);
+                if (match) videoId = match[1];
+            }
+
+            if (videoId) {
+                // Use the standard embed URL
+                iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
+                titleEl.textContent = title || 'Now Playing';
+                modal.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            } else {
+                // If no ID found, open directly in new tab (bypass embed entirely)
+                window.open(url, '_blank');
+            }
+        }
+
+        function closeVideoModal(event) {
+            if (event && event.target !== event.currentTarget) return;
+            const modal = document.getElementById('videoModal');
+            const iframe = document.getElementById('videoIframe');
+            modal.classList.remove('open');
+            iframe.src = ''; // Stop video and clear error state
+            document.body.style.overflow = 'auto';
+        }
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Esc' || e.key === 'Escape') {
+                closeVideoModal({ target: document.getElementById('videoModal') });
+            }
+        });
+
+        // ── Row Drag Scroll ──
+        document.querySelectorAll('.row-scroll').forEach(row => {
+            let isDown = false;
+            let startX;
+            let scrollLeft;
+
+            row.addEventListener('mousedown', (e) => {
+                isDown = true;
+                row.classList.add('dragging');
+                startX = e.pageX - row.offsetLeft;
+                scrollLeft = row.scrollLeft;
+            });
+            row.addEventListener('mouseleave', () => {
+                isDown = false;
+                row.classList.remove('dragging');
+            });
+            row.addEventListener('mouseup', () => {
+                isDown = false;
+                row.classList.remove('dragging');
+            });
+            row.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - row.offsetLeft;
+                const walk = (x - startX) * 1.2;
+                row.scrollLeft = scrollLeft - walk;
+            });
+        });
+
+        // ── Back to Top ──
+        window.addEventListener('scroll', () => {
+            const btn = document.getElementById('backToTop');
+            if (window.scrollY > 400) btn.classList.add('visible');
+            else btn.classList.remove('visible');
+        });
+
+
+        // ═══════════════════════════════════════════════════════════════
+        //  3. ADMIN LOGIC
+        // ═══════════════════════════════════════════════════════════════
+
+        let adminUnlocked = false;
+
+        function openAdminModal() {
+            document.getElementById('adminModal').classList.add('open');
+            document.body.style.overflow = 'hidden';
+            renderAdminMedia();
+        }
+
+        function closeAdminModal() {
+            document.getElementById('adminModal').classList.remove('open');
+            document.body.style.overflow = 'auto';
+        }
+
+        function verifyAdmin() {
+            const pass = document.getElementById('adminPassInput').value;
+            if (pass === 'admin123') {
+                adminUnlocked = true;
+                document.getElementById('adminControls').style.display = 'block';
+                document.getElementById('adminPassInput').style.display = 'none';
+                document.querySelector('.admin-password-hint').style.display = 'none';
+                renderAdminMedia();
+                alert('✅ Admin access granted!');
+            } else {
+                alert('❌ Invalid password. Try again.');
+            }
+        }
+
+        function renderAdminMedia() {
+            const grid = document.getElementById('adminMediaGrid');
+            grid.innerHTML = '';
+            if (GLOBAL_MEDIA_DATA.length === 0) {
+                grid.innerHTML =
+                    '<p style="color:#555; grid-column:1/-1; text-align:center;">No media uploaded yet.</p>';
+                return;
+            }
+            GLOBAL_MEDIA_DATA.forEach((item, idx) => {
+                const div = document.createElement('div');
+                div.className = 'media-card-admin';
+                div.innerHTML = `
+                    <img src="${item.photo}" loading="lazy" onerror="this.src='https://placehold.co/400x600/111/444?text=D.T'">
+                    <h4>${item.title}</h4>
+                    <p>${item.textCode.substring(0, 30)}</p>
+                    <button class="delete-btn" onclick="deleteMedia(${idx})">🗑️ Remove</button>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        function deleteMedia(index) {
+            if (confirm('Delete this card permanently?')) {
+                GLOBAL_MEDIA_DATA.splice(index, 1);
+                renderRows();
+                renderAdminMedia();
+                generateUpdatedCode();
+            }
+        }
+
+        function processUpload() {
+            const title = document.getElementById('mediaTitle').value.trim();
+            const url = document.getElementById('mediaUrl').value.trim();
+            const code = document.getElementById('mediaTextCode').value.trim();
+            const file = document.getElementById('mediaFile').files[0];
+
+            if (!title || !url || !code) {
+                alert('Please fill all fields!');
+                return;
+            }
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const maxW = 400;
+                        const scale = maxW / img.width;
+                        canvas.width = maxW;
+                        canvas.height = img.height * scale;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                        addMedia(title, url, code, dataUrl);
+                    };
+                };
+                reader.readAsDataURL(file);
+            } else {
+                addMedia(title, url, code, 'https://placehold.co/400x600/111/d4af37?text=D.T');
+            }
+        }
+
+        function addMedia(title, url, code, photo) {
+            GLOBAL_MEDIA_DATA.push({ title, url, textCode: code, photo });
+            renderRows();
+            renderAdminMedia();
+            generateUpdatedCode();
+            document.getElementById('mediaTitle').value = '';
+            document.getElementById('mediaUrl').value = '';
+            document.getElementById('mediaTextCode').value = '';
+            document.getElementById('mediaFile').value = '';
+            alert('✅ Media added! Copy the code below to save permanently.');
+        }
+
+        function generateUpdatedCode() {
+            const exportBox = document.getElementById('exportBox');
+            exportBox.style.display = 'block';
+            const fullHtml = document.documentElement.outerHTML;
+            const regex = /let GLOBAL_MEDIA_DATA = \[\s*[\s\S]*?\s*\];/;
+            const updated = fullHtml.replace(regex, `let GLOBAL_MEDIA_DATA = ${JSON.stringify(GLOBAL_MEDIA_DATA)};`);
+            document.getElementById('exportArea').value = updated;
+        }
+
+
+        // ═══════════════════════════════════════════════════════════════
+        //  4. INIT
+        // ═══════════════════════════════════════════════════════════════
+
+        // ── Custom Cursor ──
+        const pointer = document.getElementById('custom-pointer');
+        if (pointer) {
+            let mx = window.innerWidth / 2,
+                my = window.innerHeight / 2;
+            let px = 0,
+                py = 0;
+            document.addEventListener('mousemove', (e) => {
+                mx = e.clientX;
+                my = e.clientY;
+            });
+
+            function animPointer() {
+                px += (mx - px) * 0.18;
+                py += (my - py) * 0.18;
+                pointer.style.left = `${px}px`;
+                pointer.style.top = `${py}px`;
+                requestAnimationFrame(animPointer);
+            }
+            animPointer();
+        }
+
+        document.querySelectorAll('button, a, .movie-card, .nav-links li, .nav-right i, .nav-avatar').forEach(el => {
+            el.addEventListener('mouseenter', () => document.body.classList.add('hover-active'));
+            el.addEventListener('mouseleave', () => document.body.classList.remove('hover-active'));
+        });
+
+        window.addEventListener('scroll', () => {
+            const nav = document.getElementById('navbar');
+            if (window.scrollY > 60) nav.classList.add('scrolled');
+            else nav.classList.remove('scrolled');
+        });
+
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('loading-screen').classList.add('hide');
+            }, 300);
+        });
+
+        renderRows();
+
+        console.log('✅ D.T TRENDS Updated: Error 153 fixed with fallback link!');
+        console.log('🔑 Admin Password: admin123');
+    </script>
+
+</body>
+</html>
